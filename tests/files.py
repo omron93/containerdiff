@@ -24,6 +24,7 @@ import os
 import difflib
 import filecmp
 import logging
+import magic
 
 from os.path import join as pjoin
 
@@ -96,15 +97,12 @@ def test_packages(output_dir1, output_dir2, verbosity):
     """ Test changes in packages installed by package manager.
 
     Result contains a dict {"added":.., "removed":.., "modified"}.
-    First two keys have list values. These lists contains string
-    "<package name>-<version>" for added/removed packages. Key
-    "modified" has value according the verbose mode.
+    First two keys have list values. And these lists contain strings
+    "<package_name>-<version>" for added/removed packages. Key
+    "modified" has list value which contains tuples
+      (<package_name>-<old version>,<package_name>-<new version>)
 
-    Verbose modes:
-    verbose     - "modified" contains tuple
-            (<package name>-<old version>,<package name>-<new version>)
-    silet       - same as verbose
-    supersilent - same as silent + ability to filter values in the dict
+    Verbose mode does not add anything.
     """
     packages1, versions1 = zip(*package_manager.get_installed_packages(output_dir1))
     packages2, versions2 = zip(*package_manager.get_installed_packages(output_dir2))
@@ -163,30 +161,33 @@ def metadata_diff(filepath, metadata1, metadata2):
 def test_unowned_files(output_dir1, metadata1, output_dir2, metadata2, verbosity):
     """ Test changes in files that are not installed by package manager.
 
-    Result contains a dict {"added":.., "removed":.., "modified"}.
-    First two keys have list values. These lists contains paths to
-    added/removed files. Key "modified" has value according the verbose
-    mode.
+    Result contains a dict {"added":.., "removed":.., "modified"}. Key
+    values are lists. Firt two values contain paths to added/removed
+    files. Key "modified" by default also has list value which contains
+    paths to modified files.
 
-    Verbose modes:
-    verbose     - "modified" contains diff of files with changes and its metadata changes
-    silet       - "modified" contains only names of added/modified/removed files
-    supersilent - same as silent + ability to filter values in the dict
+    In verbose mode key "modified" contains file diff and file metadata
+    changes. So list contains tuples
+      (file_path, file_diff, file_metadatadiff)
     """
     unowned_files1 = package_manager.get_unowned_files(output_dir1, metadata1)
     unowned_files2 = package_manager.get_unowned_files(output_dir2, metadata2)
 
-    added = [file for file in (set(unowned_files2)-set(unowned_files1))]
-    removed = [file for file in (set(unowned_files1)-set(unowned_files2))]
+    mime_loader = magic.open(magic.MAGIC_MIME)
+    mime_loader.load()
+
+    added = [filepath for filepath in (set(unowned_files2)-set(unowned_files1))]
+    removed = [filepath for filepath in (set(unowned_files1)-set(unowned_files2))]
     modified = []
-    for file in (set(unowned_files1).intersection(set(unowned_files2))):
-        metadata = metadata_diff(file, metadata1, metadata2)
-        files = files_diff(file, output_dir1, output_dir2)
+    for filepath in (set(unowned_files1).intersection(set(unowned_files2))):
+        metadata = metadata_diff(filepath, metadata1, metadata2)
         if verbosity >= 3:
-            if len(files) != 0 or len(metadata) != 0:
-                modified.append((file, files, metadata))
+            diff = files_diff(filepath, output_dir1, output_dir2)
+            mime = mime_loader.file(filepath)
+            if len(diff) != 0 or len(metadata) != 0:
+                modified.append((filepath, mime, diff, metadata))
         else:
-            modified.append(file)
+            modified.append(filepath)
 
     return {"added":added, "removed":removed, "modified":modified}
 

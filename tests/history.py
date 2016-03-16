@@ -47,7 +47,7 @@ def run(image1, image2, verbosity):
     """ Test history of the image.
 
     Adds one key to the output of the diff tool:
-    "history" - unified_diff style changes in command used to create
+    "history" - unified_diff style changes in commands used to create
                 the image
     """
     ID1, metadata1, output_dir1 = image1

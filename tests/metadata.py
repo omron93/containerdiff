@@ -23,7 +23,6 @@ import docker
 import difflib
 import logging
 
-config_path = "./tests/metadata.config"
 logger = logging.getLogger(__name__)
 
 def expand_dict(data, path=""):
@@ -78,17 +77,6 @@ def test_metadata(ID1, ID2, old, new, verbosity):
 
     diff = [item for item in difflib.unified_diff(expanded_old, expanded_new, n=0) if not item.startswith(("+++","---","@@"))]
 
-    try:
-        with open(config_path, "r") as fd:
-            exclude_metadata = fd.read().splitlines()
-    except FileNotFoundError:
-        logger.warn("Config file not found!")
-        exclude_metadata = []
-
-    logger.info("Exclude some values from the result according to "+config_path+".")
-    for exclude in exclude_metadata:
-        diff = filter(lambda i: not i[1:].startswith(exclude), diff)
-
     return list(diff)
 
 
@@ -110,4 +98,3 @@ def run(image1, image2, verbosity):
 
     diff = test_metadata(ID1, ID2, inspect_metadata1, inspect_metadata2, verbosity)
     return {"metadata": diff}
-

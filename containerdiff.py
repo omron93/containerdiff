@@ -27,11 +27,47 @@ import importlib
 import pkgutil
 import os
 import json
+import re
 
 import undocker
 import tests
 
 program_version = "0.1"
+
+logger = logging.getLogger(__name__)
+
+def filter_output(data, options):
+    if not "action" in options or not isinstance(options["action"], str):
+        logger.error("Filter: wrong or missing \"action\" key in filter options")
+        return data
+    if not "data" in options or not isinstance(options["data"], list):
+        logger.error("Filter: wrong or missing \"data\" key in filter options")
+        return data
+
+    if "keys" in options:
+        if not isinstance(data, dict):
+            logger.error("Filter: \"keys\" filter option specified but filtered data is not dictionary")
+            return data
+        for key in options["keys"]:
+            if not key in data:
+                logger.warning("Filter: in filtered data there is no key " + key)
+                break
+            data[key] = filter_output(data[key], {"action":options["action"], "data":options["data"]})
+    else:
+        pattern = re.compile("|".join(options["data"]))
+        if not isinstance(data, list):
+            logger.error("Filter: output of test is not a list")
+            return data
+        if len(options["data"]) == 0:
+            logger.warning("Filter: \"data\" filter option is empty")
+            return data
+
+        if options["action"] == "include":
+            data = list(filter(lambda item: pattern.search(str(item)), data))
+        elif options["action"] == "exclude":
+            data = list(filter(lambda item: not pattern.search(str(item)), data))
+
+    return data
 
 def main():
     """ Run Container Diff tool.
@@ -43,7 +79,7 @@ def main():
     and calling main function from this module.
     """
     parser = argparse.ArgumentParser(prog="containerdiff", description="Show changes among two container images.")
-    parser.add_argument("-o", "--output", help="Output directory.")
+    parser.add_argument("-o", "--output", help="Output file.")
     parser.add_argument("-v", "--verbose", help="Set the verbosity of diff output. See help of individual tests.", action="store_const", default=3, const=3, dest="verbosity")
     parser.add_argument("-s", "--silent", help="Set the verbosity of diff output. See help of individual tests.", action="store_const", default=3, const=2, dest="verbosity")
     parser.add_argument("-ss", "--supersilent", help="Set the verbosity of diff output. See help of individual tests.", action="store_const", default=3, const=1, dest="verbosity")
@@ -55,7 +91,6 @@ def main():
 
     # Set logger
     logging.basicConfig(level=args.log_level)
-    logger = logging.getLogger(__name__)
     # Get full image IDs
     ID1 = None
     ID2 = None
@@ -76,22 +111,29 @@ def main():
     logger.info("ID2 - "+ID2)
 
     with tempfile.TemporaryDirectory() as output_dir1, \
-            tempfile.TemporaryDirectory() as output_dir2:
+         tempfile.TemporaryDirectory() as output_dir2, \
+         open("./filter.json") as filter_file:
         metadata1 = undocker.extract(ID1, output_dir1)
         metadata2 = undocker.extract(ID2, output_dir2)
 
         image1 = (ID1, metadata1, output_dir1)
         image2 = (ID2, metadata2, output_dir2)
 
+        filter_options = json.load(filter_file)
         result = {}
         for _, module_name, _ in pkgutil.iter_modules([os.path.dirname(tests.__file__)]):
             module = importlib.import_module("tests."+module_name)
+            test_result = {}
             try:
                 logger.info("Going to run tests."+module_name+".")
                 test_result = module.run(image1, image2, args.verbosity)
-                result.update(test_result)
             except AttributeError:
                 logger.error("Test file "+module_name+".py does not contain function run(image1, image2, verbosity)")
+            if args.verbosity == 1:
+                for key in test_result.keys():
+                    if key in filter_options:
+                        test_result[key] = filter_output(test_result[key], filter_options[key])
+            result.update(test_result)
 
         logger.info("Tests finished. Writing output.")
         #return result
