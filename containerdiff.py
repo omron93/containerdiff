@@ -80,9 +80,9 @@ def main():
     """
     parser = argparse.ArgumentParser(prog="containerdiff", description="Show changes among two container images.")
     parser.add_argument("-o", "--output", help="Output file.")
-    parser.add_argument("-v", "--verbose", help="Set the verbosity of diff output. See help of individual tests.", action="store_const", default=3, const=3, dest="verbosity")
+    parser.add_argument("-v", "--verbose", help="Set the verbosity of diff output. See help of individual tests. (Default)", action="store_const", default=3, const=3, dest="verbosity")
     parser.add_argument("-s", "--silent", help="Set the verbosity of diff output. See help of individual tests.", action="store_const", default=3, const=2, dest="verbosity")
-    parser.add_argument("-ss", "--supersilent", help="Set the verbosity of diff output. See help of individual tests.", action="store_const", default=3, const=1, dest="verbosity")
+    parser.add_argument("-f", "--filter", help="Enable filtering. Specify JSON file with options (\"./filter.json\" by default).", type=str, const="./filter.json", nargs=?)
     parser.add_argument("-l", "--logging", help="Print additional logging information.", default=logging.WARN,  type=int, choices=[logging.DEBUG, logging.INFO, logging.WARN, logging.ERROR, logging.CRITICAL], dest="log_level")
     parser.add_argument("-d", "--debug", help="Print additional debug information (= -l 10).", action="store_const", const=logging.DEBUG, dest="log_level")
     parser.add_argument("--version", action="version", version="%(prog)s "+program_version)
@@ -109,17 +109,18 @@ def main():
 
     logger.info("ID1 - "+ID1)
     logger.info("ID2 - "+ID2)
+    if args.filter:
+        with open(args.filter) as filter_file:
+            filter_options = json.load(filter_file)
 
     with tempfile.TemporaryDirectory() as output_dir1, \
-         tempfile.TemporaryDirectory() as output_dir2, \
-         open("./filter.json") as filter_file:
+         tempfile.TemporaryDirectory() as output_dir2:
         metadata1 = undocker.extract(ID1, output_dir1)
         metadata2 = undocker.extract(ID2, output_dir2)
 
         image1 = (ID1, metadata1, output_dir1)
         image2 = (ID2, metadata2, output_dir2)
 
-        filter_options = json.load(filter_file)
         result = {}
         for _, module_name, _ in pkgutil.iter_modules([os.path.dirname(tests.__file__)]):
             module = importlib.import_module("tests."+module_name)
@@ -129,7 +130,7 @@ def main():
                 test_result = module.run(image1, image2, args.verbosity)
             except AttributeError:
                 logger.error("Test file "+module_name+".py does not contain function run(image1, image2, verbosity)")
-            if args.verbosity == 1:
+            if args.filter:
                 for key in test_result.keys():
                     if key in filter_options:
                         test_result[key] = filter_output(test_result[key], filter_options[key])

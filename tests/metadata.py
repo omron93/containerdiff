@@ -67,10 +67,7 @@ def test_metadata(ID1, ID2, old, new, verbosity):
     (see ouput of "expand_dict" function in this module). And return
     unified_diff of this strings.
 
-    Verbose modes:
-    verbose and silent - output contains unified_diff style of changes
-                         in metadata
-    supersilent - ability to filter values in the result
+    Verbose mode does not add anything.
     """
     expanded_old = expand_dict(old)
     expanded_new = expand_dict(new)
