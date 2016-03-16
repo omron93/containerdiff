@@ -28,10 +28,10 @@ logger = logging.getLogger(__name__)
 def expand_dict(data, path=""):
     """ Expand Python dict or list object (which replresents JSON
     object) into list. Every element of list is a string and it has two
-    logical parts divided by " : ". So every list element has this
-    form: "<path>:<value>".
+    logical parts divided by " = ". So every list element has this
+    form: "<path> = <value>".
 
-    <path> consists of strings joined together by "." . Each part of
+    <path> consists of strings joined together by ":" . Each part of
     this <path> tells where to find the <value> in Python dict. After
     expanding a list every value in the list has the same prefix.
 
@@ -39,7 +39,7 @@ def expand_dict(data, path=""):
 
 
     For example this dict {"foo":1, "bar":{"a":2, "b":["x=1", "y=2"]}}
-    results to ["foo : 1", "bar.a : 2", "bar.b : x=1", "bar.b : y = 2"].
+    results to ["foo = 1", "bar:a = 2", "bar:b = x=1", "bar:b = y=2"].
 
     expand_dict also takes second parameter path. This parameter is by
     default "", but can be set to add some prefix to elements of result
@@ -54,10 +54,10 @@ def expand_dict(data, path=""):
     if isinstance(data, dict):
         result = []
         for item in data:
-            result.extend(expand_dict(data[item], path+item+"."))
+            result.extend(expand_dict(data[item], path+item+":"))
         return result
 
-    return [path[:-1]+" : "+str(data)]
+    return [path[:-1]+" = "+str(data)]
 
 
 def test_metadata(ID1, ID2, old, new, verbosity):
