@@ -32,7 +32,7 @@ import re
 import undocker
 import tests
 
-program_version = "0.1"
+program_version = "0.2"
 
 logger = logging.getLogger(__name__)
 
@@ -80,9 +80,8 @@ def main():
     """
     parser = argparse.ArgumentParser(prog="containerdiff", description="Show changes among two container images.")
     parser.add_argument("-o", "--output", help="Output file.")
-    parser.add_argument("-v", "--verbose", help="Set the verbosity of diff output. See help of individual tests. (Default)", action="store_const", default=3, const=3, dest="verbosity")
-    parser.add_argument("-s", "--silent", help="Set the verbosity of diff output. See help of individual tests.", action="store_const", default=3, const=2, dest="verbosity")
-    parser.add_argument("-f", "--filter", help="Enable filtering. Specify JSON file with options (\"./filter.json\" by default).", type=str, const="./filter.json", nargs=?)
+    parser.add_argument("-s", "--silent", help="Lower verbosity of diff output. See help of individual tests.", action="store_true")
+    parser.add_argument("-f", "--filter", help="Enable filtering. Specify JSON file with options (\"./filter.json\" by default).", type=str, const="./filter.json", nargs="?")
     parser.add_argument("-l", "--logging", help="Print additional logging information.", default=logging.WARN,  type=int, choices=[logging.DEBUG, logging.INFO, logging.WARN, logging.ERROR, logging.CRITICAL], dest="log_level")
     parser.add_argument("-d", "--debug", help="Print additional debug information (= -l 10).", action="store_const", const=logging.DEBUG, dest="log_level")
     parser.add_argument("--version", action="version", version="%(prog)s "+program_version)
@@ -127,7 +126,7 @@ def main():
             test_result = {}
             try:
                 logger.info("Going to run tests."+module_name+".")
-                test_result = module.run(image1, image2, args.verbosity)
+                test_result = module.run(image1, image2, args.silent)
             except AttributeError:
                 logger.error("Test file "+module_name+".py does not contain function run(image1, image2, verbosity)")
             if args.filter:

@@ -93,7 +93,7 @@ class RPM:
 # Contains the object of package manager class
 package_manager = RPM()
 
-def test_packages(output_dir1, output_dir2, verbosity):
+def test_packages(output_dir1, output_dir2, silent):
     """ Test changes in packages installed by package manager.
 
     Result contains a dict {"added":.., "removed":.., "modified"}.
@@ -101,8 +101,6 @@ def test_packages(output_dir1, output_dir2, verbosity):
     "<package_name>-<version>" for added/removed packages. Key
     "modified" has list value which contains tuples
       (<package_name>-<old version>,<package_name>-<new version>)
-
-    Verbose mode does not add anything.
     """
     packages1, versions1 = zip(*package_manager.get_installed_packages(output_dir1))
     packages2, versions2 = zip(*package_manager.get_installed_packages(output_dir2))
@@ -158,17 +156,16 @@ def metadata_diff(filepath, metadata1, metadata2):
     return result
 
 
-def test_unowned_files(output_dir1, metadata1, output_dir2, metadata2, verbosity):
+def test_unowned_files(output_dir1, metadata1, output_dir2, metadata2, silent):
     """ Test changes in files that are not installed by package manager.
 
     Result contains a dict {"added":.., "removed":.., "modified"}. Key
     values are lists. Firt two values contain paths to added/removed
-    files. Key "modified" by default also has list value which contains
-    paths to modified files.
+    files. Key "modified" by default contains path to file, file type,
+    file diff and file metadata changes. So list contains tuples
+      (file_path, file_type, file_diff, file_metadatadiff)
 
-    In verbose mode key "modified" contains file diff and file metadata
-    changes. So list contains tuples
-      (file_path, file_diff, file_metadatadiff)
+    In silent mode, key "modified" contains only file paths.
     """
     unowned_files1 = package_manager.get_unowned_files(output_dir1, metadata1)
     unowned_files2 = package_manager.get_unowned_files(output_dir2, metadata2)
@@ -181,19 +178,19 @@ def test_unowned_files(output_dir1, metadata1, output_dir2, metadata2, verbosity
     modified = []
     for filepath in (set(unowned_files1).intersection(set(unowned_files2))):
         metadata = metadata_diff(filepath, metadata1, metadata2)
-        if verbosity >= 3:
+        if silent:
+            modified.append(filepath)
+        else:
             diff = files_diff(filepath, output_dir1, output_dir2)
             mime = mime_loader.file(filepath)
             if len(diff) != 0 or len(metadata) != 0:
                 modified.append((filepath, mime, diff, metadata))
-        else:
-            modified.append(filepath)
 
     return {"added":added, "removed":removed, "modified":modified}
 
 
 
-def run(image1, image2, verbosity):
+def run(image1, image2, silent):
     """ Test files and packages in the image.
 
     Adds two keys to the output of the diff tool:
@@ -206,6 +203,6 @@ def run(image1, image2, verbosity):
     logger.info("Going to test files and packages in the image.")
 
     result = {}
-    result["packages"] = test_packages(output_dir1, output_dir2, verbosity)
-    result["files"] = test_unowned_files(output_dir1, metadata1, output_dir2, metadata2, verbosity)
+    result["packages"] = test_packages(output_dir1, output_dir2, silent)
+    result["files"] = test_unowned_files(output_dir1, metadata1, output_dir2, metadata2, silent)
     return result
