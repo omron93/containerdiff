@@ -28,6 +28,7 @@ import pkgutil
 import os
 import json
 import re
+import shutil
 
 import undocker
 import tests
@@ -54,7 +55,6 @@ def filter_output(data, options):
                 break
             data[key] = filter_output(data[key], {"action":options["action"], "data":options["data"]})
     else:
-        pattern = re.compile("|".join(options["data"]))
         if not isinstance(data, list):
             logger.error("Filter: output of test is not a list")
             return data
@@ -62,6 +62,7 @@ def filter_output(data, options):
             logger.warning("Filter: \"data\" filter option is empty")
             return data
 
+        pattern = re.compile("|".join(options["data"]))
         if options["action"] == "include":
             data = list(filter(lambda item: pattern.search(str(item)), data))
         elif options["action"] == "exclude":
@@ -79,11 +80,12 @@ def main():
     and calling main function from this module.
     """
     parser = argparse.ArgumentParser(prog="containerdiff", description="Show changes among two container images.")
-    parser.add_argument("-o", "--output", help="Output file.")
     parser.add_argument("-s", "--silent", help="Lower verbosity of diff output. See help of individual tests.", action="store_true")
-    parser.add_argument("-f", "--filter", help="Enable filtering. Specify JSON file with options (\"./filter.json\" by default).", type=str, const="./filter.json", nargs="?")
+    parser.add_argument("-f", "--filter", help="Enable filtering. Optionally specify JSON file with options (\"./filter.json\" by default).", type=str, const="./filter.json", nargs="?")
+    parser.add_argument("-o", "--output", help="Output file.")
+    parser.add_argument("-p", "--preserve", help="Do not remove directories with extracted images. Optionally specify directory where to extact images (\"/tmp\" by default).", type=str, const="/tmp", nargs="?", dest="directory")
     parser.add_argument("-l", "--logging", help="Print additional logging information.", default=logging.WARN,  type=int, choices=[logging.DEBUG, logging.INFO, logging.WARN, logging.ERROR, logging.CRITICAL], dest="log_level")
-    parser.add_argument("-d", "--debug", help="Print additional debug information (= -l 10).", action="store_const", const=logging.DEBUG, dest="log_level")
+    parser.add_argument("-d", "--debug", help="Print additional debug information (= -l "+str(logging.DEBUG)+").", action="store_const", const=logging.DEBUG, dest="log_level")
     parser.add_argument("--version", action="version", version="%(prog)s "+program_version)
     parser.add_argument("imageID", nargs=2)
     args = parser.parse_args()
@@ -112,8 +114,13 @@ def main():
         with open(args.filter) as filter_file:
             filter_options = json.load(filter_file)
 
-    with tempfile.TemporaryDirectory() as output_dir1, \
-         tempfile.TemporaryDirectory() as output_dir2:
+    try:
+        extract_dir = "/tmp"
+        if args.directory:
+            extract_dir = args.directory
+        output_dir1 = tempfile.mkdtemp(dir=extract_dir)
+        output_dir2 = tempfile.mkdtemp(dir=extract_dir)
+
         metadata1 = undocker.extract(ID1, output_dir1)
         metadata2 = undocker.extract(ID2, output_dir2)
 
@@ -143,7 +150,22 @@ def main():
         else:
             sys.stdout.write(json.dumps(result))
 
-    return result
+        if not args.directory:
+            shutil.rmtree(output_dir1)
+            shutil.rmtree(output_dir2)
+        else:
+            #with open(os.path.join(args.directory,ID1+".json"), "w") as fd:
+            #    fd.write(json.dumps(metadata1))
+            #with open(os.path.join(args.directory,ID2+".json"), "w") as fd:
+            #    fd.write(json.dumps(metadata2))
+            print("Image "+args.imageID[0]+" extracted to "+output_dir1+".")
+            print("Image "+args.imageID[1]+" extracted to "+output_dir2+".")
+
+        return result
+    except:
+        shutil.rmtree(output_dir1, ignore_errors=True)
+        shutil.rmtree(output_dir2, ignore_errors=True)
+        raise
 
 
 if __name__ == '__main__':
