@@ -84,7 +84,7 @@ def run(image1, image2, silent):
     ID1, metadata1, output_dir1 = image1
     ID2, metadata2, output_dir2 = image2
 
-    logger.info("Going to test metadata of the image.")
+    logger.info("Testing metadata of the image.")
 
     cli = docker.Client(base_url='unix://var/run/docker.sock')
 

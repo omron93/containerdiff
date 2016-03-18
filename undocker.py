@@ -73,17 +73,17 @@ def extract(ID, output, one_layer=False, whiteouts=True):
     try:
         ID = cli.inspect_image(ID)["Id"]
     except docker.errors.NotFound:
-        logger.error("Can't find image %s. Exit!" % ID)
-        return
+        logger.critical("Can't find image %s", ID)
+        raise
 
-    logger.info("saving image "+ID+".")
+    logger.info("Saving image %s", ID)
     image = cli.get_image(ID)
 
     with tempfile.NamedTemporaryFile() as fd:
         fd.write(image.data)
 
         with tarfile.open(name=fd.name) as img:
-            logger.info('extracting image %s', ID)
+            logger.info("Extracting image %s", ID)
             if not one_layer:
                 layers = find_layers(img, ID)
             else:
@@ -93,7 +93,7 @@ def extract(ID, output, one_layer=False, whiteouts=True):
                 os.mkdir(output)
 
             for layer_id in reversed(layers):
-                logger.info('extracting layer %s', layer_id)
+                logger.info("Extracting layer %s", layer_id)
                 with tarfile.TarFile(fileobj=
                         img.extractfile('%s/layer.tar' % layer_id)) as layer:
 
@@ -105,7 +105,7 @@ def extract(ID, output, one_layer=False, whiteouts=True):
                             else:
                                 newpath = path.replace('/.wh.', '/')
 
-                            logger.info('removing path %s', newpath)
+                            logger.debug("Removing path %s", newpath)
                             del metadata["/"+newpath]
                             newpath = os.path.join(output, newpath)
                             # TODO use try to catch errors
@@ -116,11 +116,10 @@ def extract(ID, output, one_layer=False, whiteouts=True):
                             continue
 
                         metadata["/"+path] = member.get_info()
-                        #logger.debug('member metadata: %s', metadata[path])
 
                         if not member.isdev():
                             layer.extract(member, path=output, set_attrs=False)
-                    logger.info("metadata size - %i", len(metadata))
+                    logger.debug("Actual metadata size - %i", len(metadata))
 
     return metadata
 

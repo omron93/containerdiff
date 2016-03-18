@@ -148,7 +148,7 @@ def metadata_diff(filepath, metadata1, metadata2):
     result = {}
     for key in diff:
         if isinstance(metadata1[filepath][key[0]], bytes):
-            logger.debug(str(key)+"is type of bytes")
+            logger.debug("%s is type of bytes", str(key))
             result[key[0]] = (metadata1[filepath][key[0]].decode("utf-8"), metadata2[filepath][key[0]].decode("utf-8"))
         else:
             result[key[0]] = (metadata1[filepath][key[0]], metadata2[filepath][key[0]])
@@ -178,13 +178,14 @@ def test_unowned_files(output_dir1, metadata1, output_dir2, metadata2, silent):
     modified = []
     for filepath in (set(unowned_files1).intersection(set(unowned_files2))):
         metadata = metadata_diff(filepath, metadata1, metadata2)
+
         if silent:
             modified.append(filepath)
         else:
             diff = files_diff(filepath, output_dir1, output_dir2)
-            mime = mime_loader.file(filepath)
+            mime_new = mime_loader.file(os.path.join(output_dir2,filepath[1:]))
             if len(diff) != 0 or len(metadata) != 0:
-                modified.append((filepath, mime, diff, metadata))
+                modified.append((filepath, mime_new, diff, metadata))
 
     return {"added":added, "removed":removed, "modified":modified}
 
@@ -200,7 +201,7 @@ def run(image1, image2, silent):
     ID1, metadata1, output_dir1 = image1
     ID2, metadata2, output_dir2 = image2
 
-    logger.info("Going to test files and packages in the image.")
+    logger.info("Testing files and packages in the image")
 
     result = {}
     result["packages"] = test_packages(output_dir1, output_dir2, silent)

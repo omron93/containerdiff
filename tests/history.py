@@ -22,6 +22,9 @@
 import undocker
 import difflib
 import docker
+import logging
+
+logger = logging.getLogger(__name__)
 
 def dockerfile_from_image(ID, cli):
     """ Return list of commands used to create image *ID*. Thess
@@ -52,6 +55,8 @@ def run(image1, image2, silent):
     """
     ID1, metadata1, output_dir1 = image1
     ID2, metadata2, output_dir2 = image2
+
+    logger.info("Testing history of the image")
 
     cli = docker.Client(base_url="unix://var/run/docker.sock")
 

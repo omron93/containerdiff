@@ -99,19 +99,20 @@ def main():
     try:
         ID1 = cli.inspect_image(args.imageID[0])["Id"]
     except docker.errors.NotFound:
-        logger.critical("Can't find image %s. Exit!" % args.imageID[0])
+        logger.critical("Can't find image %s. Exit!", args.imageID[0])
         sys.exit(1)
 
     try:
         ID2 = cli.inspect_image(args.imageID[1])["Id"]
     except docker.errors.NotFound:
-        logger.critical("Can't find image %s. Exit!" % args.imageID[1])
+        logger.critical("Can't find image %s. Exit!", args.imageID[1])
         sys.exit(1)
 
     logger.info("ID1 - "+ID1)
     logger.info("ID2 - "+ID2)
     if args.filter:
         with open(args.filter) as filter_file:
+            logger.debug("Using %s to get filter optins", args.filter)
             filter_options = json.load(filter_file)
 
     try:
@@ -132,25 +133,28 @@ def main():
             module = importlib.import_module("tests."+module_name)
             test_result = {}
             try:
-                logger.info("Going to run tests."+module_name+".")
+                logger.info("Going to run tests.%s", module_name)
                 test_result = module.run(image1, image2, args.silent)
             except AttributeError:
-                logger.error("Test file "+module_name+".py does not contain function run(image1, image2, verbosity)")
+                logger.error("Test file %s.py does not contain function run(image1, image2, verbosity)", module_name)
             if args.filter:
                 for key in test_result.keys():
                     if key in filter_options:
+                        logger.info("Filtering '%s' key in output", key)
                         test_result[key] = filter_output(test_result[key], filter_options[key])
             result.update(test_result)
 
-        logger.info("Tests finished. Writing output.")
+        logger.info("Tests finished")
         #return result
         if args.output:
+            logger.info("Writing output to %s", args.output)
             with open(args.output, "w") as fd:
                 fd.write(json.dumps(result))
         else:
             sys.stdout.write(json.dumps(result))
 
         if not args.directory:
+            logger.debug("Removing temporary directories")
             shutil.rmtree(output_dir1)
             shutil.rmtree(output_dir2)
         else:
@@ -163,6 +167,7 @@ def main():
 
         return result
     except:
+        looger.debug("Error occured - cleaning temporary directories")
         shutil.rmtree(output_dir1, ignore_errors=True)
         shutil.rmtree(output_dir2, ignore_errors=True)
         raise
