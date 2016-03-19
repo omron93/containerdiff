@@ -26,8 +26,6 @@ import filecmp
 import logging
 import magic
 
-from os.path import join as pjoin
-
 logger = logging.getLogger(__name__)
 
 class RPM:
@@ -48,7 +46,7 @@ class RPM:
         dbpath parameter (by default var/lib/rpm).
         """
 
-        rpm.addMacro("_dbpath", os.path.abspath(pjoin(root, dbpath)))
+        rpm.addMacro("_dbpath", os.path.abspath(os.sep.join([root, dbpath])))
         ts = rpm.TransactionSet()
         mi = ts.dbMatch()
         filenames = [ hdr['FILENAMES'] for hdr in mi]
@@ -64,7 +62,7 @@ class RPM:
         # list store only path without symbolic links for easier
         # comparison.
 
-        filelist = [os.path.relpath(pjoin(os.path.realpath(pjoin(root, os.path.dirname(filepath))), os.path.basename(filepath)), start=root)[1:] \
+        filelist = [os.sep.join(["",os.path.relpath(os.path.realpath(os.sep.join([root, os.path.dirname(filepath)])), start=root), os.path.basename(filepath)]) \
                         for filepath in filelist]
         return filelist
 
@@ -82,7 +80,7 @@ class RPM:
         a tuple (<package name>, <version>).
         """
 
-        rpm.addMacro("_dbpath", os.path.abspath(os.path.join(root, dbpath)))
+        rpm.addMacro("_dbpath", os.path.abspath(os.sep.join([root, dbpath])))
         ts = rpm.TransactionSet()
         mi = ts.dbMatch()
 
@@ -122,8 +120,8 @@ def files_diff(filepath, dirpath1, dirpath2):
 
     Result is unified diff of the file.
     """
-    file1 = os.path.join(dirpath1,filepath[1:])
-    file2 = os.path.join(dirpath2,filepath[1:])
+    file1 = os.path.normpath(os.sep.join([dirpath1,filepath]))
+    file2 = os.path.normpath(os.sep.join([dirpath2,filepath]))
     diff = []
     if os.path.isfile(file1) and os.path.isfile(file2):
         try:
@@ -183,7 +181,7 @@ def test_unowned_files(output_dir1, metadata1, output_dir2, metadata2, silent):
             modified.append(filepath)
         else:
             diff = files_diff(filepath, output_dir1, output_dir2)
-            mime_new = mime_loader.file(os.path.join(output_dir2,filepath[1:]))
+            mime_new = mime_loader.file(os.path.normpath(os.sep.join([output_dir2,filepath])))
             if len(diff) != 0 or len(metadata) != 0:
                 modified.append((filepath, mime_new, diff, metadata))
 

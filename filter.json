@@ -1,20 +1,22 @@
 {
     "files" : {
-        "keys" : ["added", "removed", "modified"] ,
-        "action" : "exclude" ,
-        "data" : ["/var/lib/yum/yumdb"]
+        "keys" : ["added", "removed", "modified"],
+        "action" : "exclude",
+        "data" : ["/var/lib/yum/yumdb",
+                  "/var/lib/yum/history",
+                  "/var/log/yum.log"]
     },
     "packages" : {
-        "keys" : ["added", "removed", "modified"] ,
-        "action" : "exclude" ,
+        "keys" : ["added", "removed", "modified"],
+        "action" : "exclude",
         "data" : []
     },
     "history" : {
-        "action" : "exclude" ,
+        "action" : "exclude",
         "data" : []
     },
     "metadata" : {
-        "action" : "exclude" ,
+        "action" : "exclude",
         "data" : ["Size",
                   "DockerVersion",
                   "Id",
@@ -24,7 +26,8 @@
                   "Parent",
                   "ContainerConfig",
                   "RepoDigests'",
-                  "Container" ]
+                  "Container",
+                  "Config:Labels:io.openshift.builder-version"]
     }
 }
 
