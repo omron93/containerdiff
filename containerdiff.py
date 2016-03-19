@@ -167,7 +167,7 @@ def main():
 
         return result
     except:
-        looger.debug("Error occured - cleaning temporary directories")
+        logger.debug("Error occured - cleaning temporary directories")
         shutil.rmtree(output_dir1, ignore_errors=True)
         shutil.rmtree(output_dir2, ignore_errors=True)
         raise

@@ -84,7 +84,7 @@ class RPM:
         ts = rpm.TransactionSet()
         mi = ts.dbMatch()
 
-        name_version = [ (hdr['name'].decode("utf-8"), hdr['version'].decode("utf-8")) for hdr in mi]
+        name_version = [ (hdr['name'].decode("utf-8"), hdr['version'].decode("utf-8")+"-"+hdr['release'].decode("utf-8")) for hdr in mi]
         return name_version
 
 
@@ -94,21 +94,21 @@ package_manager = RPM()
 def test_packages(output_dir1, output_dir2, silent):
     """ Test changes in packages installed by package manager.
 
-    Result contains a dict {"added":.., "removed":.., "modified"}.
-    First two keys have list values. And these lists contain strings
-    "<package_name>-<version>" for added/removed packages. Key
-    "modified" has list value which contains tuples
-      (<package_name>-<old version>,<package_name>-<new version>)
+    Result contains a dict {"added":.., "removed":.., "modified"}. Each
+    key has a list value. Values for first two keys contain tuples
+    ("<package_name>,<version>") for added/removed packages. Key
+    "modified" contains tuples (<package_name>, <old_version>,
+    <new_version>).
     """
     packages1, versions1 = zip(*package_manager.get_installed_packages(output_dir1))
     packages2, versions2 = zip(*package_manager.get_installed_packages(output_dir2))
 
     # Removed packages - list of strgins "package-version"
-    removed = [package+"-"+versions1[packages1.index(package)] for package in list(set(packages1)-set(packages2))]
+    removed = [(package, versions1[packages1.index(package)]) for package in list(set(packages1)-set(packages2))]
     # Added packages - list of strings "package-version"
-    added = [package+"-"+versions2[packages2.index(package)] for package in list(set(packages2)-set(packages1))]
+    added = [(package, versions2[packages2.index(package)]) for package in list(set(packages2)-set(packages1))]
     # Packages with different versions - list of tuples ("package-oldversion", "package-newversion")
-    modified = [(package+"-"+versions1[packages1.index(package)], package+"-"+versions2[packages2.index(package)]) \
+    modified = [(package, versions1[packages1.index(package)], versions2[packages2.index(package)]) \
                 for package in list(set(packages2).intersection(set(packages1))) \
                 if versions1[packages1.index(package)] != versions2[packages2.index(package)]]
 
@@ -171,17 +171,24 @@ def test_unowned_files(output_dir1, metadata1, output_dir2, metadata2, silent):
     mime_loader = magic.open(magic.MAGIC_MIME)
     mime_loader.load()
 
-    added = [filepath for filepath in (set(unowned_files2)-set(unowned_files1))]
-    removed = [filepath for filepath in (set(unowned_files1)-set(unowned_files2))]
+    added = []
+    for filepath in (set(unowned_files2)-set(unowned_files1)):
+        mime = mime_loader.file(os.path.normpath(os.sep.join([output_dir2,filepath])))
+        added.append((filepath, mime))
+    removed = []
+    for filepath in (set(unowned_files1)-set(unowned_files2)):
+        mime = mime_loader.file(os.path.normpath(os.sep.join([output_dir1,filepath])))
+        removed.append((filepath, mime))
     modified = []
     for filepath in (set(unowned_files1).intersection(set(unowned_files2))):
         metadata = metadata_diff(filepath, metadata1, metadata2)
+        diff = files_diff(filepath, output_dir1, output_dir2)
+        mime_new = mime_loader.file(os.path.normpath(os.sep.join([output_dir2,filepath])))
 
         if silent:
-            modified.append(filepath)
+            if len(diff) != 0 or len(metadata) != 0:
+                modified.append((filepath, mime_new))
         else:
-            diff = files_diff(filepath, output_dir1, output_dir2)
-            mime_new = mime_loader.file(os.path.normpath(os.sep.join([output_dir2,filepath])))
             if len(diff) != 0 or len(metadata) != 0:
                 modified.append((filepath, mime_new, diff, metadata))
 
