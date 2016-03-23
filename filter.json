@@ -6,15 +6,6 @@
                   "/var/lib/yum/history",
                   "/var/log/yum.log"]
     },
-    "packages" : {
-        "keys" : ["added", "removed", "modified"],
-        "action" : "exclude",
-        "data" : []
-    },
-    "history" : {
-        "action" : "exclude",
-        "data" : []
-    },
     "metadata" : {
         "action" : "exclude",
         "data" : ["Size",

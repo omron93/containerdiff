@@ -27,7 +27,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 def dockerfile_from_image(ID, cli):
-    """ Return list of commands used to create image *ID*. Thess
+    """ Return list of commands used to create image *ID*. These
     commands are get from docker history.
     """
     info = cli.inspect_image(ID)

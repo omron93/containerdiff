@@ -22,3 +22,5 @@ usage: containerdiff [-h] [-o OUTPUT] [-s] [-f [FILTER]] [-l {10,20,30,40,50}]
 | -l {10,20,30,40,50}, --logging {10,20,30,40,50} | Print additional logging information.      |
 | -d, --debug                | Print additional debug information (= -l 10).                   |
 | --version                  | Show program's version number and exit                          |
+
+See [example usage](./docs/example.md).
