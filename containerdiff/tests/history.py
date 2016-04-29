@@ -19,7 +19,6 @@
 """ Show diff in container image history.
 """
 
-import undocker
 import difflib
 import docker
 import logging
