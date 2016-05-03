@@ -32,6 +32,7 @@ setup(
     long_description=long_description,
 
     packages = find_packages(),
+    package_data = {"containerdiff" : ["filter.json"]},
 
     install_requires=[
         'docker_py',

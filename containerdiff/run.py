@@ -36,6 +36,8 @@ from . import program_description, program_version
 
 logger = logging.getLogger(__name__)
 
+default_filter = os.path.join(os.path.dirname(__file__), "filter.json")
+
 def filter_output(data, options):
     if not "action" in options or not isinstance(options["action"], str):
         logger.error("Filter: wrong or missing \"action\" key in filter options")
@@ -165,7 +167,7 @@ def main():
     """
     parser = argparse.ArgumentParser(prog="containerdiff", description=program_description)
     parser.add_argument("-s", "--silent", help="Lower verbosity of diff output. See help of individual tests.", action="store_true")
-    parser.add_argument("-f", "--filter", help="Enable filtering. Optionally specify JSON file with options (\"./filter.json\" by default).", type=str, const="./filter.json", nargs="?")
+    parser.add_argument("-f", "--filter", help="Enable filtering. Optionally specify JSON file with options (preinstalled \"filter.json\" by default).", type=str, const=default_filter, nargs="?")
     parser.add_argument("-o", "--output", help="Output file.")
     parser.add_argument("-p", "--preserve", help="Do not remove directories with extracted images. Optionally specify directory where to extact images (\"/tmp\" by default).", type=str, const="/tmp", nargs="?", dest="directory")
     parser.add_argument("-l", "--logging", help="Print additional logging information.", default=logging.WARN,  type=int, choices=[logging.DEBUG, logging.INFO, logging.WARN, logging.ERROR, logging.CRITICAL], dest="log_level")
