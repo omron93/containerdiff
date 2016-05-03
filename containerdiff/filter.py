@@ -40,7 +40,7 @@ def filter_output(data, options):
             data[key] = filter_output(data[key], {"action":options["action"], "data":options["data"]})
     else:
         if not isinstance(data, list):
-            logger.error("Filter: output of test is not a list")
+            logger.error("Filter: output of the module is not a list")
             return data
         if len(options["data"]) == 0:
             logger.warning("Filter: \"data\" filter option is empty")

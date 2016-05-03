@@ -28,7 +28,7 @@ import json
 import shutil
 
 from . import undocker
-from . import tests
+from . import modules
 from .filter import filter_output
 
 # Import program_version and program_desctiptions
@@ -82,22 +82,22 @@ def run(args):
         image2 = (ID2, metadata2, output_dir2)
 
         result = {}
-        for _, module_name, _ in pkgutil.iter_modules([os.path.dirname(tests.__file__)]):
-            module = importlib.import_module(tests.__package__+"."+module_name)
-            test_result = {}
+        for _, module_name, _ in pkgutil.iter_modules([os.path.dirname(modules.__file__)]):
+            module = importlib.import_module(modules.__package__+"."+module_name)
+            module_result = {}
             try:
-                logger.info("Going to run tests.%s", module_name)
-                test_result = module.run(image1, image2, args['silent'])
+                logger.info("Going to run modules.%s", module_name)
+                module_result = module.run(image1, image2, args['silent'])
             except AttributeError:
-                logger.error("Test file %s.py does not contain function run(image1, image2, verbosity)", module_name)
+                logger.error("Module file %s.py does not contain function run(image1, image2, verbosity)", module_name)
             if args['filter']:
-                for key in test_result.keys():
+                for key in module_result.keys():
                     if key in filter_options:
                         logger.info("Filtering '%s' key in output", key)
-                        test_result[key] = filter_output(test_result[key], filter_options[key])
-            result.update(test_result)
+                        module_result[key] = filter_output(module_result[key], filter_options[key])
+            result.update(module_result)
 
-        logger.info("Tests finished")
+        logger.info("All modules finished")
         #return result
         if args['output']:
             logger.info("Writing output to %s", args['output'])
@@ -133,7 +133,7 @@ def main():
     and calling main function from this module.
     """
     parser = argparse.ArgumentParser(prog="containerdiff", description=program_description)
-    parser.add_argument("-s", "--silent", help="Lower verbosity of diff output. See help of individual tests.", action="store_true")
+    parser.add_argument("-s", "--silent", help="Lower verbosity of diff output. See help of individual modules.", action="store_true")
     parser.add_argument("-f", "--filter", help="Enable filtering. Optionally specify JSON file with options (preinstalled \"filter.json\" by default).", type=str, const=default_filter, nargs="?")
     parser.add_argument("-o", "--output", help="Output file.")
     parser.add_argument("-p", "--preserve", help="Do not remove directories with extracted images. Optionally specify directory where to extact images (\"/tmp\" by default).", type=str, const="/tmp", nargs="?", dest="directory")
