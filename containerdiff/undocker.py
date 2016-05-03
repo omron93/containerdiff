@@ -1,7 +1,7 @@
-#   Container Diff tool - show differences among container images
+#   ContainerDiff - tool to show differences among container images
 #
 #   Copyright (C) 2015 Lars Kellogg-Stedman lars@oddbit.com
-#   Copyright (C) 2015 Marek Skalický mskalick@redhat.com
+#   Copyright (C) 2016 Marek Skalicky mskalick@redhat.com
 #
 #   This program is free software; you can redistribute it and/or modify
 #   it under the terms of the GNU General Public License as published by
@@ -14,9 +14,8 @@
 #   GNU General Public License for more details.
 #
 #   You should have received a copy of the GNU General Public License
-#   along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
+#   along with containerdiff.  If not, see <http://www.gnu.org/licenses/>.
 #
-
 
 import json
 import os
@@ -69,7 +68,7 @@ def extract(ID, output, one_layer=False, whiteouts=True):
     """
     metadata = {}
 
-    cli = docker.Client(base_url="unix://var/run/docker.sock")
+    cli = docker.AutoVersionClient(base_url="unix://var/run/docker.sock")
     try:
         ID = cli.inspect_image(ID)["Id"]
     except docker.errors.NotFound:
