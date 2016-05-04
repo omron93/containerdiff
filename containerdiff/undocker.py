@@ -30,11 +30,18 @@ from contextlib import closing
 logger = logging.getLogger(__name__)
 
 def find_layers(img, ID):
-    """ Returns list of layers of image *ID*.
-    First element of the list is a *ID*, then image's parent etc.
+    """ Returns a list of layers of image *ID*. First element of the
+    list is a top layer and then the underlying layers - it is reversed
+    order in which docker expands layer during container creation.
 
-    The image *ID* has to be "full ID" (64 characters long).
+    If docker does not use content addressability, the *ID* has to be
+    "full ID" (64 characters long).
     """
+    # Get ID of the first layer if docker uses content addressability
+    if 'manifest.json' in img.getnames():
+        with closing(img.extractfile('manifest.json')) as fd:
+            manifest = json.loads(fd.read().decode("utf8"))
+        ID = manifest[0]['Layers'][-1].split('/')[0]
 
     if len(ID) != 64:
         return []
