@@ -23,6 +23,8 @@ import docker
 import difflib
 import logging
 
+import containerdiff
+
 logger = logging.getLogger(__name__)
 
 def expand_dict(data, path=""):
@@ -86,7 +88,7 @@ def run(image1, image2, silent):
 
     logger.info("Testing metadata of the image.")
 
-    cli = docker.AutoVersionClient(base_url='unix://var/run/docker.sock')
+    cli = docker.AutoVersionClient(base_url = containerdiff.docker_socket)
 
     inspect_metadata1 = cli.inspect_image(ID1)
     inspect_metadata2 = cli.inspect_image(ID2)

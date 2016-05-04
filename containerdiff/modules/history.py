@@ -23,6 +23,8 @@ import difflib
 import docker
 import logging
 
+import containerdiff
+
 logger = logging.getLogger(__name__)
 
 def dockerfile_from_image(ID, cli):
@@ -57,7 +59,7 @@ def run(image1, image2, silent):
 
     logger.info("Testing history of the image")
 
-    cli = docker.AutoVersionClient(base_url="unix://var/run/docker.sock")
+    cli = docker.AutoVersionClient(base_url = containerdiff.docker_socket)
 
     history1 = dockerfile_from_image(ID1, cli)
     history2 = dockerfile_from_image(ID2, cli)

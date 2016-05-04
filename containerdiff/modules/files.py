@@ -27,11 +27,13 @@ import docker
 import tempfile
 import shutil
 
+import containerdiff
+
 logger = logging.getLogger(__name__)
 
 def get_output_from_container(image, command):
     logger.info("Running '%s' in image '%s'", command, image)
-    cli = docker.AutoVersionClient(base_url='unix://var/run/docker.sock')
+    cli = docker.AutoVersionClient(base_url = containerdiff.docker_socket)
 
     volume_dir = tempfile.mkdtemp(dir="/tmp")
     logger.debug("Container output volume: %s", volume_dir)

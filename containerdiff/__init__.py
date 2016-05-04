@@ -19,4 +19,6 @@
 program_version = "0.2"
 program_description = "Show changes among two container images."
 
+docker_socket = "unix://var/run/docker.sock"
+
 from containerdiff.run import *

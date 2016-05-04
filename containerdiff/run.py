@@ -27,6 +27,8 @@ import os
 import json
 import shutil
 
+import containerdiff
+
 from . import undocker
 from . import modules
 from .filter import filter_output
@@ -40,15 +42,19 @@ default_filter = os.path.join(os.path.dirname(__file__), "filter.json")
 
 def run(args):
     """
-    dictionary = {'silent': (True|False), 'log_level': \d+, 'imageID': [\s+, \s+], 'output': (None|\s+), 'filter': (None|\s+), 'directory': (None|\s+)}
+    dictionary = {'silent': (True|False), 'log_level': \d+, 'imageID': [\s+, \s+], 'output': (None|\s+), 'filter': (None|\s+), 'directory': (None|\s+), 'host': (None|\s+)}
     """
     # Set logger
     logging.basicConfig(level=args['log_level'])
 
+    # Set docker host
+    if args['host']:
+        containerdiff.docker_socket = args['host']
+
     # Get full image IDs
     ID1 = None
     ID2 = None
-    cli = docker.AutoVersionClient(base_url="unix://var/run/docker.sock")
+    cli = docker.AutoVersionClient(base_url = containerdiff.docker_socket)
     try:
         ID1 = cli.inspect_image(args['imageID'][0])["Id"]
     except docker.errors.NotFound:
@@ -135,8 +141,9 @@ def main():
     parser = argparse.ArgumentParser(prog="containerdiff", description=program_description)
     parser.add_argument("-s", "--silent", help="Lower verbosity of diff output. See help of individual modules.", action="store_true")
     parser.add_argument("-f", "--filter", help="Enable filtering. Optionally specify JSON file with options (preinstalled \"filter.json\" by default).", type=str, const=default_filter, nargs="?")
-    parser.add_argument("-o", "--output", help="Output file.")
+    parser.add_argument("-o", "--output", help="Output file.", type=str)
     parser.add_argument("-p", "--preserve", help="Do not remove directories with extracted images. Optionally specify directory where to extact images (\"/tmp\" by default).", type=str, const="/tmp", nargs="?", dest="directory")
+    parser.add_argument("--host", help="Docker daemon socket to connect to", type=str)
     parser.add_argument("-l", "--logging", help="Print additional logging information.", default=logging.WARN,  type=int, choices=[logging.DEBUG, logging.INFO, logging.WARN, logging.ERROR, logging.CRITICAL], dest="log_level")
     parser.add_argument("-d", "--debug", help="Print additional debug information (= -l "+str(logging.DEBUG)+").", action="store_const", const=logging.DEBUG, dest="log_level")
     parser.add_argument("--version", action="version", version="%(prog)s "+program_version)

@@ -4,7 +4,8 @@
         "action" : "exclude",
         "data" : ["/var/lib/yum/yumdb",
                   "/var/lib/yum/history",
-                  "/var/log/yum.log"]
+                  "/var/log/yum.log",
+                  "/var/cache/yum"]
     },
     "metadata" : {
         "action" : "exclude",

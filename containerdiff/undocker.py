@@ -25,6 +25,8 @@ import tempfile
 import shutil
 import docker
 
+import containerdiff
+
 from contextlib import closing
 
 logger = logging.getLogger(__name__)
@@ -38,7 +40,7 @@ def find_layers(img, ID):
     "full ID" (64 characters long).
     """
     # Get ID of the first layer if docker uses content addressability
-    if 'manifest.json' in img.getnames():
+    if ('manifest.json' and ID.split(':')[-1]+'.json') in img.getnames():
         with closing(img.extractfile('manifest.json')) as fd:
             manifest = json.loads(fd.read().decode("utf8"))
         ID = manifest[0]['Layers'][-1].split('/')[0]
@@ -75,7 +77,7 @@ def extract(ID, output, one_layer=False, whiteouts=True):
     """
     metadata = {}
 
-    cli = docker.AutoVersionClient(base_url="unix://var/run/docker.sock")
+    cli = docker.AutoVersionClient(base_url = containerdiff.docker_socket)
     try:
         ID = cli.inspect_image(ID)["Id"]
     except docker.errors.NotFound:
