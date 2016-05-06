@@ -22,7 +22,7 @@ from setuptools import setup, find_packages
 import containerdiff
 
 # Get the long description from the README file
-with open('README.md', encoding='utf-8') as f:
+with open('README.rst', encoding='utf-8') as f:
     long_description = f.read()
 
 setup(
@@ -36,7 +36,7 @@ setup(
 
     install_requires=[
         'docker_py',
-        'python-magic',
+        'file-magic',
     ],
 
     author = "Marek Skalicky",
