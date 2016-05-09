@@ -16,7 +16,7 @@
 #   along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-program_version = "0.2"
+program_version = "0.3"
 program_description = "Show changes among two container images."
 
 docker_socket = "unix://var/run/docker.sock"
