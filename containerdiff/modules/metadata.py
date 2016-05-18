@@ -77,7 +77,7 @@ def test_metadata(ID1, ID2, old, new):
     return list(diff)
 
 
-def run(image1, image2, silent):
+def run(image1, image2):
     """ Test metadata of the image.
 
     Adds one key to the output of the diff tool:

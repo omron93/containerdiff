@@ -25,6 +25,7 @@ import logging
 import magic
 import logging
 
+import containerdiff
 import containerdiff.package_managers
 
 logger = logging.getLogger(__name__)
@@ -73,7 +74,7 @@ def metadata_diff(filepath, metadata1, metadata2):
     return result
 
 
-def test_unowned_files(ID1, output_dir1, metadata1, ID2, output_dir2, metadata2, silent):
+def test_unowned_files(ID1, output_dir1, metadata1, ID2, output_dir2, metadata2):
     """ Test changes in files that are not installed by package manager.
 
     Result contains a dict {"added":.., "removed":.., "modified"}. Key
@@ -104,7 +105,7 @@ def test_unowned_files(ID1, output_dir1, metadata1, ID2, output_dir2, metadata2,
         diff = files_diff(filepath, output_dir1, output_dir2)
         mime_new = mime_loader.file(os.path.normpath(os.sep.join([output_dir2,filepath])))
 
-        if silent:
+        if containerdiff.silent:
             if len(diff) != 0 or len(metadata) != 0:
                 modified.append((filepath, mime_new))
         else:
@@ -115,7 +116,7 @@ def test_unowned_files(ID1, output_dir1, metadata1, ID2, output_dir2, metadata2,
 
 
 
-def run(image1, image2, silent):
+def run(image1, image2):
     """ Test files in the image.
 
     Adds one key to the output of the diff tool:
@@ -124,8 +125,8 @@ def run(image1, image2, silent):
     ID1, metadata1, output_dir1 = image1
     ID2, metadata2, output_dir2 = image2
 
-    logger.info("Testing files and packages in the image")
+    logger.info("Testing files in the image")
 
     result = {}
-    result["files"] = test_unowned_files(ID1, output_dir1, metadata1, ID2, output_dir2, metadata2, silent)
+    result["files"] = test_unowned_files(ID1, output_dir1, metadata1, ID2, output_dir2, metadata2)
     return result

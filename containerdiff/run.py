@@ -42,7 +42,7 @@ default_filter = os.path.join(os.path.dirname(__file__), "filter.json")
 
 def run(args):
     """
-    dictionary = {'silent': (True|False), 'log_level': \d+, 'imageID': [\s+, \s+], 'output': (None|\s+), 'filter': (None|\s+), 'directory': (None|\s+), 'host': (None|\s+)}
+    dictionary = {'log_level': \d+, 'imageID': [\s+, \s+])}
     """
     # Set logger
     logging.basicConfig(level=args['log_level'])
@@ -50,6 +50,10 @@ def run(args):
     # Set docker host
     if args['host']:
         containerdiff.docker_socket = args['host']
+
+    # Set silent mode
+    if args['silent']:
+        containerdiff.silent = args['silent']
 
     # Get full image IDs
     ID1 = None
@@ -93,7 +97,7 @@ def run(args):
             module_result = {}
             try:
                 logger.info("Going to run modules.%s", module_name)
-                module_result = module.run(image1, image2, args['silent'])
+                module_result = module.run(image1, image2)
             except AttributeError:
                 logger.error("Module file %s.py does not contain function run(image1, image2, verbosity)", module_name)
             if args['filter']:

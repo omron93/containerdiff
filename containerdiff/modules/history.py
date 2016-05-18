@@ -47,7 +47,7 @@ def dockerfile_from_image(ID, cli):
     return commands
 
 
-def run(image1, image2, silent):
+def run(image1, image2):
     """ Test history of the image.
 
     Adds one key to the output of the diff tool:

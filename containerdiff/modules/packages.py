@@ -32,7 +32,7 @@ logger = logging.getLogger(__name__)
 # Contains the object of package manager class
 package_manager = containerdiff.package_managers.RPM()
 
-def test_packages(ID1, ID2, silent):
+def test_packages(ID1, ID2):
     """ Test changes in packages installed by package manager.
 
     Result contains a dict {"added":.., "removed":.., "modified"}. Each
@@ -57,7 +57,7 @@ def test_packages(ID1, ID2, silent):
 
 
 
-def run(image1, image2, silent):
+def run(image1, image2):
     """ Test packages in the image.
 
     Adds one key to the output of the diff tool:
@@ -66,8 +66,8 @@ def run(image1, image2, silent):
     ID1, metadata1, output_dir1 = image1
     ID2, metadata2, output_dir2 = image2
 
-    logger.info("Testing files and packages in the image")
+    logger.info("Testing packages in the image")
 
     result = {}
-    result["packages"] = test_packages(ID1, ID2, silent)
+    result["packages"] = test_packages(ID1, ID2)
     return result
