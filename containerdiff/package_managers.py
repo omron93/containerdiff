@@ -16,7 +16,12 @@
 #   along with containerdiff.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-""" Add support for different package managers.
+"""Add support for different package managers.
+
+It is also possible to add support to another package mangers. To be
+able to use tests in modules with the new package manager it is
+necessary to implement it as a class which provides functions:
+get_installed_packages and get_unowned_files .
 """
 
 import docker
@@ -30,6 +35,11 @@ import containerdiff
 logger = logging.getLogger(__name__)
 
 def get_output_from_container(image, command):
+    """Run 'command' in shell in container based on 'image'. Get its
+    output by redirecting STDOUT to mounted file.
+
+    Return list o lines from the 'command' output.
+    """
     logger.info("Running '%s' in image '%s'", command, image)
     cli = docker.AutoVersionClient(base_url = containerdiff.docker_socket)
 
@@ -57,24 +67,16 @@ def get_output_from_container(image, command):
 
 
 class RPM:
-    """ This class represents RPM package manager.
-
-    It is also possible to add support to another package mangers. To
-    be able to use tests in this module with the new package manager it is
-    necessary to implement it as a class which provides functions:
-    get_installed_packages and get_unowned_files . Instance of this
-    class have to be assigned to "package_manager" variable of this
-    module.
-    """
+    """This class represents RPM package manager."""
 
     def _get_owned_files(self, ID, root):
-        """ Get list files installed by rpms in image 'ID' which is
-        expanded into 'root'. It runs 'rpm -qal' command in the image
+        """Get list files installed by rpms in image 'ID' which is
+        expanded into 'root'. It runs "rpm -qal" command in the image
         and removes symbolic links in directories in the result.
         """
         # Some RPM package does not contain file, so rpm prints
-        # '(contains no files)' string.
-        filelist = get_output_from_container(ID, "rpm -qal | grep -v \(contains\ no\ files\)").split('\n')
+        # "(contains no files)" string.
+        filelist = get_output_from_container(ID, "rpm -qal | grep -v \(contains\ no\ files\)").split("\n")
 
         # Do not use directory symlinks in paths.
         # Some packages for example say that own files in /lib and some
@@ -89,17 +91,17 @@ class RPM:
         return filelist
 
     def get_unowned_files(self, ID, metadata, root):
-        """ Return the list of files that are listed in metadata dict
+        """Return the list of files that are listed in 'metadata' dict
         (result from extracting the image) and are not installed by
-        rpm packages.
+        rpm packages in image 'ID'.
         """
 
         owned_files = self._get_owned_files(ID, root)
         return list(set(metadata.keys())-set(owned_files))
 
     def get_installed_packages(self, ID):
-        """ Return list of installed files. Each element of the list is
-        a tuple (<package name>, <version>).
+        """Return list of installed packages in image 'ID'. Each
+        element of the list is a tuple (<package name>, <version>).
         """
         packages = get_output_from_container(ID, "rpm -qa").split()
 

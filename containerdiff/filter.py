@@ -16,20 +16,34 @@
 #   along with containerdiff.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+"""Filter an output of modules."""
+
 import logging
 import re
 
 logger = logging.getLogger(__name__)
 
 def filter_output(data, options):
+    """Filter an output of a module.
+
+    'data' - data to filter (dict or list)
+    'option' - filtering options (see filter.json for example or
+               documentation of containerdiff)
+
+    Return value are filtered data. In case of any error it returns
+    unmodified data.
+    """
+    # Action key is mandatory
     if not "action" in options or not isinstance(options["action"], str):
         logger.error("Filter: wrong or missing \"action\" key in filter options")
         return data
+    # Filtering options have to contain regular expressions to match
     if not "data" in options or not isinstance(options["data"], list):
         logger.error("Filter: wrong or missing \"data\" key in filter options")
         return data
 
     if "keys" in options:
+        # Filter each specified key
         if not isinstance(data, dict):
             logger.error("Filter: \"keys\" filter option specified but filtered data is not dictionary")
             return data
@@ -46,7 +60,9 @@ def filter_output(data, options):
             logger.warning("Filter: \"data\" filter option is empty")
             return data
 
+        # Check if item match any regular expression
         pattern = re.compile("|".join(options["data"]))
+        # Do filtering of string representations of items
         if options["action"] == "include":
             data = list(filter(lambda item: pattern.search(str(item)), data))
         elif options["action"] == "exclude":

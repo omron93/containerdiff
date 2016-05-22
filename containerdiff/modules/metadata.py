@@ -16,8 +16,7 @@
 #   along with containerdiff.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-""" Show diff of container image metadata.
-"""
+"""Show diff of container image metadata."""
 
 import docker
 import difflib
@@ -28,7 +27,7 @@ import containerdiff
 logger = logging.getLogger(__name__)
 
 def expand_dict(data, path=""):
-    """ Expand Python dict or list object (which replresents JSON
+    """Expand Python dict or list object (which replresents JSON
     object) into list. Every element of list is a string and it has two
     logical parts divided by " = ". So every list element has this
     form: "<path> = <value>".
@@ -46,6 +45,8 @@ def expand_dict(data, path=""):
     expand_dict also takes second parameter path. This parameter is by
     default "", but can be set to add some prefix to elements of result
     list.
+
+    Returns list of strings.
     """
     if isinstance(data, list):
         result = []
@@ -63,11 +64,16 @@ def expand_dict(data, path=""):
 
 
 def test_metadata(ID1, ID2, old, new):
-    """ Test changes in metadata of the image.
+    """Test changes in metadata of the image.
+
+    'ID1' - ID of first image
+    'ID2' - ID of second image
+    'old' - metadata of files from first image
+    'new' - metadata of files from second image
 
     Expands the metadata from `docker inspect` to the list of strings
-    (see ouput of "expand_dict" function in this module). And return
-    unified_diff of this strings.
+    (see ouput of "expand_dict" function in this module). Returns
+    unified_diff of these strings.
     """
     expanded_old = expand_dict(old)
     expanded_new = expand_dict(new)
@@ -78,10 +84,11 @@ def test_metadata(ID1, ID2, old, new):
 
 
 def run(image1, image2):
-    """ Test metadata of the image.
+    """Test metadata of the image.
 
     Adds one key to the output of the diff tool:
-    "metadata" - see output of "test_metadata" function in this module
+    "metadata" - unified_diff style changes in metadata (see output of
+                "test_metadata" function in this module)
     """
     ID1, metadata1, output_dir1 = image1
     ID2, metadata2, output_dir2 = image2

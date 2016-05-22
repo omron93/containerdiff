@@ -17,6 +17,8 @@
 #   along with containerdiff.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+""" Extract a content of docker image."""
+
 import json
 import os
 import logging
@@ -32,18 +34,20 @@ from contextlib import closing
 logger = logging.getLogger(__name__)
 
 def find_layers(img, ID):
-    """ Returns a list of underlying layers for the layer *ID*. First
+    """Returns a list of underlying layers for the layer 'ID'. First
     element of the list is a top layer and then the underlying layers -
     it is reversed order in which docker expands layers during
     container creation.
 
-    The *ID* has to be "full ID" (64 characters long).
+    'img' is a TarFile object of open docker image.
+
+    The 'ID' has to be 'full ID' (64 characters long).
     """
     if len(ID) != 64:
         return []
 
     with closing(img.extractfile('%s/json' % ID)) as fd:
-        info = json.loads(fd.read().decode("utf8"))
+        info = json.loads(fd.read().decode('utf8'))
 
     logger.debug('layer = %s', ID)
     for k in ['os', 'architecture', 'author', 'created']:
@@ -57,14 +61,14 @@ def find_layers(img, ID):
     return result
 
 def extract(ID, output, one_layer=False, whiteouts=True):
-    """ Extract the content of image *ID* to folder *output*.
+    """Extract the content of image *ID* to folder *output*.
 
     If *one_layer* is True only layer *ID* is extracted. If *whiteouts*
-    is False there is no logic with files started with ".wh.".
+    is False there is no logic with files started with '.wh.'.
 
     File information like owner, modification time and permissions is
-    not set. It is stored in the dict structure with "path to the file"
-    key (starting by "/", e.g. "/etc"). This struct is returned by this function.
+    not set. It is stored in the dict structure with 'path to the file'
+    key (starting by '/', e.g. '/etc'). This struct is returned by this function.
 
     Device files are not extracted. Only the additional metadata are
     stored in returned dictionary.
@@ -73,23 +77,23 @@ def extract(ID, output, one_layer=False, whiteouts=True):
 
     cli = docker.AutoVersionClient(base_url = containerdiff.docker_socket)
     try:
-        ID = cli.inspect_image(ID)["Id"]
+        ID = cli.inspect_image(ID)['Id']
     except docker.errors.NotFound:
         logger.critical("Can't find image %s", ID)
         raise
 
-    logger.info("Saving image %s", ID)
+    logger.info('Saving image %s', ID)
     image = cli.get_image(ID)
 
     with tempfile.NamedTemporaryFile() as fd:
         fd.write(image.data)
 
         with tarfile.open(name=fd.name) as img:
-            logger.info("Extracting image %s", ID)
+            logger.info('Extracting image %s', ID)
             # Get ID of the first layer if docker uses content addressability
             if ('manifest.json' and ID.split(':')[-1]+'.json') in img.getnames():
                 with closing(img.extractfile('manifest.json')) as fd:
-                    manifest = json.loads(fd.read().decode("utf8"))
+                    manifest = json.loads(fd.read().decode('utf8'))
                 ID = manifest[0]['Layers'][-1].split('/')[0]
 
             if not one_layer:
@@ -101,10 +105,10 @@ def extract(ID, output, one_layer=False, whiteouts=True):
                 os.mkdir(output)
 
             for layer_id in reversed(layers):
-                logger.info("Extracting layer %s", layer_id)
+                logger.info('Extracting layer %s', layer_id)
                 with tarfile.TarFile(fileobj=
                         img.extractfile('%s/layer.tar' % layer_id)) as layer:
-
+                    # Extract all members in a layer
                     for member in layer.getmembers():
                         path = member.path
                         if whiteouts and (path.startswith('.wh.') or '/.wh.' in path):
@@ -113,21 +117,21 @@ def extract(ID, output, one_layer=False, whiteouts=True):
                             else:
                                 newpath = path.replace('/.wh.', '/')
 
-                            logger.debug("Removing path %s", newpath)
-                            del metadata["/"+newpath]
+                            logger.debug('Removing path %s', newpath)
+                            del metadata['/'+newpath]
                             newpath = os.path.join(output, newpath)
-                            # TODO use try to catch errors
+
                             if os.path.isdir(newpath):
                                 shutil.rmtree(newpath)
                             else:
                                 os.unlink(newpath)
                             continue
 
-                        metadata["/"+path] = member.get_info()
+                        metadata['/'+path] = member.get_info()
 
                         if not member.isdev():
                             layer.extract(member, path=output, set_attrs=False)
-                    logger.debug("Actual metadata size - %i", len(metadata))
+                    logger.debug('Actual metadata size - %i', len(metadata))
 
     return metadata
 

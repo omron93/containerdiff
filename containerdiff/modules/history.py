@@ -16,8 +16,7 @@
 #   along with containerdiff.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-""" Show diff in container image history.
-"""
+"""Show diff in container image history."""
 
 import difflib
 import docker
@@ -28,8 +27,8 @@ import containerdiff
 logger = logging.getLogger(__name__)
 
 def dockerfile_from_image(ID, cli):
-    """ Return list of commands used to create image *ID*. These
-    commands are get from docker history.
+    """Return list of commands used to create image 'ID'. These
+    commands is an output from docker history.
     """
     info = cli.inspect_image(ID)
 
@@ -38,17 +37,19 @@ def dockerfile_from_image(ID, cli):
     history = cli.history(ID)
 
     for item in history:
+        # Remove prefix to get output more similar to Dockerfile
         if "/bin/sh -c #(nop) " in item["CreatedBy"]:
             commands.append(item["CreatedBy"][18:])
         else:
             commands.append(item["CreatedBy"])
 
+    # Return time order of commands
     commands.reverse()
     return commands
 
 
 def run(image1, image2):
-    """ Test history of the image.
+    """Test history of the image.
 
     Adds one key to the output of the diff tool:
     "history" - unified_diff style changes in commands used to create
@@ -64,6 +65,7 @@ def run(image1, image2):
     history1 = dockerfile_from_image(ID1, cli)
     history2 = dockerfile_from_image(ID2, cli)
 
+    # Do unified_diff of commands
     diff = [item for item in difflib.unified_diff(history1, history2, n=0) if not item.startswith(("+++","---","@@"))]
 
     return {"history":diff}

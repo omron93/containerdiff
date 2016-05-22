@@ -16,8 +16,7 @@
 #   along with containerdiff.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-""" Show diff in container image files.
-"""
+"""Show diff in container image files."""
 
 import os
 import difflib
@@ -34,10 +33,10 @@ logger = logging.getLogger(__name__)
 package_manager = containerdiff.package_managers.RPM()
 
 def files_diff(filepath, dirpath1, dirpath2):
-    """ Return the diff of file specified by absolute path in two
+    """Return the diff of file specified by absolute path in two
     chroots specified by two root directories.
 
-    Result is unified diff of the file.
+    Returns unified diff of the file.
     """
     file1 = os.path.normpath(os.sep.join([dirpath1,filepath]))
     file2 = os.path.normpath(os.sep.join([dirpath2,filepath]))
@@ -53,14 +52,14 @@ def files_diff(filepath, dirpath1, dirpath2):
     return diff
 
 def metadata_diff(filepath, metadata1, metadata2):
-    """ Return the differences in metadata for specified file.
+    """Return the differences in metadata for specified file.
 
     Result is a dict with string keys <name of file property> and it
     value (<value in metadata1>, <value in metadata2>).
     """
     # Find tuples (property, value) in metadata which are not same
     diff = set(metadata1[filepath].items()) ^ set(metadata2[filepath].items())
-    # Only tuples ('mtime',...) and ('chksum',...) can be different in file metadata
+    # Only tuples ("mtime",...) and ("chksum",...) can be different in file metadata
     diff = list(filter(lambda x: x[0] != "mtime" and x[0] != "chksum", diff))
 
     result = {}
@@ -75,15 +74,15 @@ def metadata_diff(filepath, metadata1, metadata2):
 
 
 def test_unowned_files(ID1, output_dir1, metadata1, ID2, output_dir2, metadata2):
-    """ Test changes in files that are not installed by package manager.
+    """Test changes in files that are not installed by package manager.
 
     Result contains a dict {"added":.., "removed":.., "modified"}. Key
     values are lists. Firt two values contain paths to added/removed
-    files. Key "modified" by default contains path to file, file type,
+    files and its types. Key "modified" by default contains path to file, file type,
     file diff and file metadata changes. So list contains tuples
       (file_path, file_type, file_diff, file_metadatadiff)
 
-    In silent mode, key "modified" contains only file paths.
+    In silent mode, key "modified" contains only file paths and file types.
     """
     unowned_files1 = package_manager.get_unowned_files(ID1, metadata1, output_dir1)
     unowned_files2 = package_manager.get_unowned_files(ID2, metadata2, output_dir2)
@@ -117,10 +116,11 @@ def test_unowned_files(ID1, output_dir1, metadata1, ID2, output_dir2, metadata2)
 
 
 def run(image1, image2):
-    """ Test files in the image.
+    """Test files in the image.
 
     Adds one key to the output of the diff tool:
-    "files" - see output of "test_files" function in this module
+    "files" - dict containing information about changed files (see
+              output of "test_files" function in this module)
     """
     ID1, metadata1, output_dir1 = image1
     ID2, metadata2, output_dir2 = image2

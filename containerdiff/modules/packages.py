@@ -16,8 +16,7 @@
 #   along with containerdiff.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-""" Show diff in container image packages.
-"""
+"""Show diff in container image packages."""
 
 import os
 import difflib
@@ -33,7 +32,7 @@ logger = logging.getLogger(__name__)
 package_manager = containerdiff.package_managers.RPM()
 
 def test_packages(ID1, ID2):
-    """ Test changes in packages installed by package manager.
+    """Test changes in packages installed by package manager.
 
     Result contains a dict {"added":.., "removed":.., "modified"}. Each
     key has a list value. Values for first two keys contain tuples
@@ -58,10 +57,11 @@ def test_packages(ID1, ID2):
 
 
 def run(image1, image2):
-    """ Test packages in the image.
+    """Test packages in the image.
 
     Adds one key to the output of the diff tool:
-    "packages" - see output of "test_packages" function in this module
+    "packages" - dict containing information about changed files (see
+                 output of "test_packages" function in this module)
     """
     ID1, metadata1, output_dir1 = image1
     ID2, metadata2, output_dir2 = image2

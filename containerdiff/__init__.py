@@ -16,6 +16,11 @@
 #   along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+"""Main module of containerdiff.
+
+I contains some options and import all parts of 'run' module.
+"""
+
 program_version = "0.3"
 program_description = "Show changes among two container images."
 

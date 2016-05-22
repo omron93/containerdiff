@@ -17,12 +17,14 @@
 #   along with containerdiff.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+"""Suport for Python distributing."""
+
 from setuptools import setup, find_packages
 
 import containerdiff
 
 # Get the long description from the README file
-with open('README.rst', encoding='utf-8') as f:
+with open("README.rst", encoding="utf-8") as f:
     long_description = f.read()
 
 setup(
@@ -35,8 +37,8 @@ setup(
     package_data = {"containerdiff" : ["filter.json"]},
 
     install_requires=[
-        'docker_py',
-        'file-magic',
+        "docker_py",
+        "file-magic",
     ],
 
     author = "Marek Skalicky",
@@ -48,27 +50,22 @@ setup(
 
     # See https://pypi.python.org/pypi?%3Aaction=list_classifiers
     classifiers = [
-        'Development Status :: 3 - Alpha',
+        "Development Status :: 3 - Alpha",
 
-        'Intended Audience :: Developers',
-        'Intended Audience :: System Administrators',
+        "Intended Audience :: Developers",
+        "Intended Audience :: System Administrators",
 
-        'Topic :: Software Development :: Build Tools',
-        'Topic :: Software Development :: Testing',
-        'Topic :: Utilities',
+        "Topic :: Software Development :: Build Tools",
+        "Topic :: Software Development :: Testing",
+        "Topic :: Utilities",
 
-        'License :: OSI Approved :: GNU Lesser General Public License v3 (LGPLv3)',
+        "License :: OSI Approved :: GNU Lesser General Public License v3 (LGPLv3)",
 
-        'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.3',
-        'Programming Language :: Python :: 3.4',
-        'Programming Language :: Python :: 3.5',
+        "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3.3",
+        "Programming Language :: Python :: 3.4",
+        "Programming Language :: Python :: 3.5",
     ],
     scripts = ["bin/containerdiff"]
-    #entry_points = {
-    #    'console_scripts' : [
-    #        'containerdiff=containerdiff:main',
-    #    ],
-    #}
 )
 
