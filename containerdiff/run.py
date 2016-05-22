@@ -29,12 +29,12 @@ import shutil
 
 import containerdiff
 
-from . import undocker
-from . import modules
-from .filter import filter_output
+from containerdiff import undocker
+from containerdiff import modules
+from containerdiff.filter import filter_output
 
 # Import program_version and program_desctiptions
-from . import program_description, program_version
+from containerdiff import program_description, program_version
 
 logger = logging.getLogger(__name__)
 

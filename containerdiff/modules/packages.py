@@ -44,11 +44,11 @@ def test_packages(ID1, ID2):
     packages1, versions1 = zip(*package_manager.get_installed_packages(ID1))
     packages2, versions2 = zip(*package_manager.get_installed_packages(ID2))
 
-    # Removed packages - list of strgins "package-version"
+    # Removed packages - list of tuples ("package", "version")
     removed = [(package, versions1[packages1.index(package)]) for package in list(set(packages1)-set(packages2))]
-    # Added packages - list of strings "package-version"
+    # Added packages - list of tuples ("package", "version")
     added = [(package, versions2[packages2.index(package)]) for package in list(set(packages2)-set(packages1))]
-    # Packages with different versions - list of tuples ("package-oldversion", "package-newversion")
+    # Packages with different versions - list of tuples ("package", "old_version", "new_version")
     modified = [(package, versions1[packages1.index(package)], versions2[packages2.index(package)]) \
                 for package in list(set(packages2).intersection(set(packages1))) \
                 if versions1[packages1.index(package)] != versions2[packages2.index(package)]]
