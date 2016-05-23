@@ -21,7 +21,7 @@
 I contains some options and import all parts of 'run' module.
 """
 
-program_version = "0.3"
+program_version = "0.4"
 program_description = "Show changes among two container images."
 
 docker_socket = "unix://var/run/docker.sock"
