@@ -23,6 +23,7 @@ import difflib
 import logging
 import magic
 import logging
+import tarfile
 
 import containerdiff
 import containerdiff.package_managers
@@ -72,6 +73,14 @@ def metadata_diff(filepath, metadata1, metadata2):
 
     return result
 
+def device_mime(tar_type):
+    """Return string representation of MIME from tarfile.type"""
+    if tar_type == tarfile.BLKTYPE:
+        return "inode/blockdevice; charset=binary"
+    elif tar_type == tarfile.CHRTYPE:
+        return "inode/chardevice; charset=binary"
+    elif tar_type == tarfile.FIFOTYPE:
+        return "inode/fifo; charset=binary"
 
 def test_unowned_files(ID1, output_dir1, metadata1, ID2, output_dir2, metadata2):
     """Test changes in files that are not installed by package manager.
@@ -92,17 +101,26 @@ def test_unowned_files(ID1, output_dir1, metadata1, ID2, output_dir2, metadata2)
 
     added = []
     for filepath in (set(unowned_files2)-set(unowned_files1)):
-        mime = mime_loader.file(os.path.normpath(os.sep.join([output_dir2,filepath])))
+        if metadata2[filepath]["type"] in  [tarfile.BLKTYPE, tarfile.CHRTYPE, tarfile.FIFOTYPE]:
+            mime = device_mime(metadata2[filepath]["type"])
+        else:
+            mime = mime_loader.file(os.path.normpath(os.sep.join([output_dir2,filepath])))
         added.append((filepath, mime))
     removed = []
     for filepath in (set(unowned_files1)-set(unowned_files2)):
-        mime = mime_loader.file(os.path.normpath(os.sep.join([output_dir1,filepath])))
+        if metadata1[filepath]["type"] in  [tarfile.BLKTYPE, tarfile.CHRTYPE, tarfile.FIFOTYPE]:
+            mime = device_mime(metadata1[filepath]["type"])
+        else:
+            mime = mime_loader.file(os.path.normpath(os.sep.join([output_dir1,filepath])))
         removed.append((filepath, mime))
     modified = []
     for filepath in (set(unowned_files1).intersection(set(unowned_files2))):
         metadata = metadata_diff(filepath, metadata1, metadata2)
         diff = files_diff(filepath, output_dir1, output_dir2)
-        mime_new = mime_loader.file(os.path.normpath(os.sep.join([output_dir2,filepath])))
+        if metadata2[filepath]["type"] in  [tarfile.BLKTYPE, tarfile.CHRTYPE, tarfile.FIFOTYPE]:
+            mime_new = device_mime(metadata2[filepath]["type"])
+        else:
+            mime_new = mime_loader.file(os.path.normpath(os.sep.join([output_dir2,filepath])))
 
         if containerdiff.silent:
             if len(diff) != 0 or len(metadata) != 0:
